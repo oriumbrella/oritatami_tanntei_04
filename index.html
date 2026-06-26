@@ -18,9 +18,10 @@
     font-family: Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
     color: #222222;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    padding: 26px 14px 12px;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 26px 14px 64px;
   }
 
   .app {
@@ -285,8 +286,11 @@
   .xPostBtn:hover { opacity: 0.85; }
 
   footer {
-    width: 100%;
-    margin-top: 24px;
+    position: fixed;
+    right: 14px;
+    bottom: 12px;
+    left: 14px;
+    z-index: 1;
     color: #555555;
     font-size: 12px;
     line-height: 1.7;
@@ -304,7 +308,7 @@
   }
 
   @media (max-width: 520px) {
-    body { padding-top: 16px; }
+    body { padding-top: 16px; padding-bottom: 70px; }
     .header { padding: 16px 18px; font-size: 16px; }
     .row { padding: 0 14px; }
     .label { width: 74px; font-size: 15px; }
@@ -799,6 +803,12 @@
     replyText.appendChild(wrap);
   }
 
+  /*
+    File004の「元になる謎ポスト」のURLをここに貼ってください。
+    例： https://x.com/r4lu3m8l/status/1234567890123456789
+  */
+  const originalPostUrl = "元ポストのURLをここに貼る";
+
   function postToX(postType) {
     let postText = "";
 
@@ -815,9 +825,20 @@
         "#おりたたみ探偵事務所 #謎解き";
     }
 
+    if (originalPostUrl === "元ポストのURLをここに貼る") {
+      alert("コード内の originalPostUrl に、File004の元ポストURLを貼ってください。");
+      return;
+    }
+
+    /*
+      元ポストのURLを一緒に渡すことで、
+      Xの投稿画面で元ポストを引用する形で報告できます。
+    */
     const postUrl =
-      "https://x.com/intent/post?text=" +
-      encodeURIComponent(postText);
+      "https://x.com/intent/tweet?text=" +
+      encodeURIComponent(postText) +
+      "&url=" +
+      encodeURIComponent(originalPostUrl);
 
     window.open(postUrl, "_blank", "noopener,noreferrer");
   }
