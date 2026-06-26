@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ミルクちゃん捜索　報告メール</title>
+
+<style>
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    min-height: 100%;
+  }
+
+  body {
+    background: #d8dde3;
+    font-family: Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    color: #222222;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 26px 14px 12px;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 760px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .mail {
+    overflow: hidden;
+    background: #f7f7f7;
+    border-radius: 14px;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.14);
+    transition: transform 0.5s ease, opacity 0.5s ease;
+  }
+
+  .mail.sending {
+    transform: translateY(-18px);
+    opacity: 0.5;
+  }
+
+  .header {
+    padding: 18px 22px;
+    background: #2f3848;
+    color: #ffffff;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    min-height: 50px;
+    padding: 0 18px;
+    border-bottom: 1px solid #cfcfcf;
+    background: #f7f7f7;
+  }
+
+  .label {
+    width: 84px;
+    flex-shrink: 0;
+    color: #666666;
+    font-size: 16px;
+  }
+
+  .value {
+    color: #111111;
+    font-size: 16px;
+    overflow-wrap: anywhere;
+  }
+
+  .value a,
+  .reply-title a {
+    color: #000000;
+    text-decoration: underline;
+  }
+
+  textarea {
+    display: block;
+    width: 100%;
+    height: 305px;
+    padding: 24px 22px;
+    border: none;
+    outline: none;
+    resize: none;
+    background: #f7f7f7;
+    color: #333333;
+    font-family: inherit;
+    font-size: 17px;
+    line-height: 1.8;
+  }
+
+  textarea::placeholder { color: #6f7580; }
+
+  .footer-area {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 76px;
+    padding: 14px 18px;
+    background: #e6e7ea;
+  }
+
+  button {
+    border: none;
+    border-radius: 6px;
+    background: #4d4f9f;
+    color: #ffffff;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 15px;
+  }
+
+  button:disabled {
+    background: #b9b9be;
+    color: #efefef;
+    cursor: not-allowed;
+  }
+
+  #sendButton {
+    min-width: 86px;
+    padding: 12px 24px;
+    font-weight: 700;
+  }
+
+  .status {
+    display: none;
+    margin-top: 14px;
+    color: #4f5560;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .notification {
+    display: none;
+    width: 100%;
+    margin-top: 16px;
+    padding: 15px 18px;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #333333;
+    text-align: left;
+    font-weight: 700;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
+    cursor: pointer;
+    pointer-events: auto;
+    touch-action: manipulation;
+    position: relative;
+    z-index: 2;
+    animation: fadeIn 0.5s;
+  }
+
+  .notification:hover { background: #f8f8fb; }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: rgba(0, 0, 0, 0.42);
+  }
+
+  .reply {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 1000;
+    width: min(92vw, 620px);
+    max-height: 84vh;
+    overflow-y: auto;
+    padding: 24px;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 22px 55px rgba(0, 0, 0, 0.28);
+    transform: translate(-50%, -50%);
+  }
+
+  .reply-title {
+    border-bottom: 1px solid #d7d7d7;
+    padding: 0 34px 12px 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.7;
+  }
+
+  .reply-suffix {
+    margin-top: 8px;
+    color: #4d4f9f;
+  }
+
+  #replyText {
+    padding-top: 18px;
+    font-size: 15px;
+    line-height: 1.85;
+  }
+
+  .reply-paragraph {
+    margin: 0 0 16px;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+
+  .closeBtn {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    width: auto;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #666666;
+    font-size: 24px;
+  }
+
+  .closeBtn:hover { color: #000000; }
+
+  .attachment {
+    margin: 0 0 18px;
+    padding: 12px;
+    border: 1px solid #d6d8df;
+    border-radius: 10px;
+    background: #f7f8fb;
+  }
+
+  .attachment-label {
+    margin-bottom: 10px;
+    color: #4f5560;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .attachment-image {
+    display: block;
+    width: 100%;
+    max-height: 360px;
+    object-fit: contain;
+    border-radius: 6px;
+    background: #e3e5ea;
+  }
+
+  .attachment-missing {
+    display: none;
+    padding: 28px 14px;
+    border-radius: 6px;
+    background: #e3e5ea;
+    color: #5d6470;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .xPostWrap {
+    margin-top: 18px;
+    text-align: center;
+  }
+
+  .xPostBtn {
+    padding: 11px 20px;
+    border-radius: 8px;
+    background: #000000;
+    color: #ffffff;
+    font-weight: 700;
+    animation: xButtonIn 0.6s ease;
+  }
+
+  .optionArea { margin-top: 18px; }
+
+  .optionBtn {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 11px 16px;
+    background: #4d4f9f;
+    color: #ffffff;
+    text-align: left;
+    font-weight: 700;
+  }
+
+  .optionBtn:hover,
+  .xPostBtn:hover { opacity: 0.85; }
+
+  footer {
+    width: 100%;
+    margin-top: 24px;
+    color: #555555;
+    font-size: 12px;
+    line-height: 1.7;
+    text-align: center;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes xButtonIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 520px) {
+    body { padding-top: 16px; }
+    .header { padding: 16px 18px; font-size: 16px; }
+    .row { padding: 0 14px; }
+    .label { width: 74px; font-size: 15px; }
+    .value { font-size: 15px; }
+    textarea { height: 260px; padding: 18px 16px; font-size: 16px; }
+    .reply { padding: 20px; }
+  }
+</style>
+</head>
+
+<body>
+<div class="app">
+  <div class="mail" id="mailBox">
+    <div class="header">ミルクちゃん捜索　報告メール</div>
+
+    <div class="row">
+      <div class="label">To</div>
+      <div class="value">
+        <a href="mailto:N.F@koreha.fiction.da">N.F@koreha.fiction.da</a>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="label">Subject</div>
+      <div class="value">ミルクちゃん捜索　報告メール</div>
+    </div>
+
+    <textarea id="answer" placeholder="ここに報告内容を入力してください"></textarea>
+
+    <div class="footer-area">
+      <button id="sendButton" type="button" disabled>送信</button>
+    </div>
+  </div>
+
+  <div id="status" class="status">送信中...</div>
+
+  <button id="notification" class="notification" type="button">
+    📩 新着メール 1件<br>
+    <strong>From: N.F@koreha.fiction.da</strong>
+  </button>
+</div>
+
+<div id="overlay" class="overlay"></div>
+
+<div id="reply" class="reply" role="dialog" aria-modal="true">
+  <button id="closeReplyButton" class="closeBtn" type="button" aria-label="閉じる">×</button>
+
+  <div class="reply-title">
+    From:
+    <a href="mailto:N.F@koreha.fiction.da">N.F@koreha.fiction.da</a><br>
+    Subject: RE: ミルクちゃん捜索　報告メール
+    <div id="replySuffix" class="reply-suffix"></div>
+  </div>
+
+  <div id="replyText"></div>
+</div>
+
+<footer>
+  本作品はフィクションです。実際の地名・団体・人物とは一切関係ございません。<br>
+  X: @r4lu3m8l
+</footer>
+
+<script>
+  const answerBox = document.getElementById("answer");
+  const sendButton = document.getElementById("sendButton");
+  const notification = document.getElementById("notification");
+  const status = document.getElementById("status");
+  const mailBox = document.getElementById("mailBox");
+  const overlay = document.getElementById("overlay");
+  const reply = document.getElementById("reply");
+  const replyText = document.getElementById("replyText");
+  const replySuffix = document.getElementById("replySuffix");
+  const closeReplyButton = document.getElementById("closeReplyButton");
+
+  const newMailQueue = [];
+
+  let isSending = false;
+  let isReplyOpen = false;
+  let typingToken = 0;
+
+  /*
+    写真を表示するための設定です。
+    GitHub上で index.html と同じ場所に「ura-photo.jpg」を置いてください。
+    ファイル名を変える場合は、下の photoAttachment の src だけ変更してください。
+  */
+  const photoAttachment = {
+    filename: "ura-photo.jpg",
+    src: "ura-photo.jpg",
+    alt: "N.Fから送られた紙の裏面の写真"
+  };
+
+  const optionLabels = {
+    1: "①渡された紙について",
+    2: "②Ｎ．Ｆは何ができるのか？",
+    3: "③写真を貰ったが…",
+    4: "④マークの裏は読めたが…"
+  };
+
+  /*
+    ヒントは ① → ② → ③ → ④ の順に開く形です。
+  */
+  const optionReplies = {
+    1: {
+      segments: [
+        {
+          type: "text",
+          text: "下のマスと連動しているのではないだろうか？"
+        }
+      ],
+      suffix: "＞渡された紙について",
+      options: [2]
+    },
+    2: {
+      segments: [
+        {
+          type: "text",
+          text: "行動を指示してくれれば、大抵のことはできるだろう。これの写真を送って。とかな。"
+        }
+      ],
+      suffix: "＞Ｎ．Ｆは何ができるのか？",
+      options: [3]
+    },
+    3: {
+      segments: [
+        {
+          type: "text",
+          text: "表の指示「まーくうらよめ」が関連しているのだろう。マークのようなものはないだろうか。"
+        }
+      ],
+      suffix: "＞写真を貰ったが…",
+      options: [4]
+    },
+    4: {
+      segments: [
+        {
+          type: "text",
+          text: "最初の記号を裏から見て使ってみたらどうだろうか。"
+        }
+      ],
+      suffix: "＞マークの裏は読めたが…"
+    }
+  };
+
+  function containsAny(text, words) {
+    return words.some(function(word) {
+      return text.includes(word);
+    });
+  }
+
+  function updateSendButton() {
+    sendButton.disabled = isSending || answerBox.value.trim() === "";
+
+    if (!isSending) {
+      sendButton.textContent = "送信";
+    }
+  }
+
+  function showNotification() {
+    if (isReplyOpen || newMailQueue.length === 0) {
+      notification.style.display = "none";
+      return;
+    }
+
+    notification.innerHTML =
+      "📩 新着メール " +
+      newMailQueue.length +
+      "件<br><strong>From: N.F@koreha.fiction.da</strong>";
+
+    notification.style.display = "block";
+    notification.style.pointerEvents = "auto";
+  }
+
+  function queueNewMail(replyData) {
+    newMailQueue.push(replyData);
+    showNotification();
+  }
+
+  function getReplyData(input) {
+    const hasMarkUraYome = input.includes("まーくうらよめ");
+    const hasUra = containsAny(input, ["裏", "うら"]);
+    const hasLook = containsAny(input, ["見", "めくって"]);
+    const hasCat = containsAny(input, ["cat", "Cat", "ネコ", "キャット", "猫", "ミルク"]);
+    const hasHint = containsAny(input, ["わからない", "ヒント"]);
+    const hasBread = containsAny(input, ["bread", "BREAD", "パン"]);
+    const hasHaruno = input.includes("春野鏡子");
+    const hasNFAbout = containsAny(input, ["N.Fについて", "N．Fについて", "NFについて"]);
+    const hasFuruhonya = containsAny(input, ["ふるほんやだ", "古本屋"]);
+
+    if (hasMarkUraYome) {
+      return {
+        segments: [
+          {
+            type: "text",
+            text: "まーく？うら…？\nどういうことだろうか？\n私にできることがあれば教えてくれ。"
+          }
+        ]
+      };
+    }
+
+    if (hasUra && hasLook) {
+      return {
+        segments: [
+          {
+            type: "text",
+            text: "紙の裏か。\n今写真を送る。\nなにかわかるだろうか？"
+          },
+          {
+            type: "attachment",
+            attachment: photoAttachment
+          }
+        ]
+      };
+    }
+
+    if (hasCat) {
+      return {
+        segments: [
+          {
+            type: "text",
+            text: "まさか追っている最中に謎解きを迫られるとは…\n君がいてくれてよかったよ。"
+          }
+        ]
+      };
+    }
+
+    if (hasHint) {
+      return {
+        segments: [
+          {
+            type: "text",
+            text: "一緒に思考を整理しよう。まずは君の推理を聞かせてくれ。"
+          }
+        ],
+        options: [1]
+      };
+    }
+
+    if (hasFuruhonya) {
+      return {
+        segments: [
+          {
+            type: "text",
+            text: "ふるほんやだ…ああ古本屋か！\nこの先ほど一店舗見かけた。そこに向ってみることにしよう。\n聞き込みの最中に謎を仕掛けられて困っていた…\n君がいてくれて助かった、ありがとう。"
+          }
+        ],
+        showXPost: "milk"
+      };
+    }
+
+    if (hasNFAbout) {
+      return {
+        segments: [
+          {
+            type: "text",
+            text: "私について、か。\n年齢は君よりもずっと上のはずだ。\n最近油物がダメになってきてね…"
+          }
+        ],
+        showXPost: "nf"
+      };
+    }
+
+    if (hasBread) {
+      return {
+        segments: [
+          {
+            type: "text",
+            text: "ミルクちゃんがいないとご主人はだいぶ混乱されていたよ…"
+          }
+        ]
+      };
+    }
+
+    if (hasHaruno) {
+      return {
+        segments: [
+          {
+            type: "text",
+            text: "彼女の事件を追っていたのだがな…。"
+          }
+        ]
+      };
+    }
+
+    return {
+      segments: [
+        {
+          type: "text",
+          text: "なるほど…情報が足りない。もう一度確認してほしい。"
+        }
+      ]
+    };
+  }
+
+  function sendMail() {
+    const input = answerBox.value.trim();
+
+    if (input === "" || isSending) {
+      return;
+    }
+
+    const replyData = getReplyData(input);
+
+    isSending = true;
+    sendButton.disabled = true;
+    sendButton.textContent = "送信中...";
+
+    answerBox.value = "";
+    notification.style.display = "none";
+    status.style.display = "block";
+    status.textContent = "送信中...";
+    mailBox.classList.add("sending");
+
+    setTimeout(function() {
+      sendButton.textContent = "✓ 送信済み";
+      status.textContent = "送信済み";
+      mailBox.classList.remove("sending");
+    }, 1200);
+
+    setTimeout(function() {
+      status.style.display = "none";
+      isSending = false;
+      updateSendButton();
+      queueNewMail(replyData);
+    }, 2800);
+  }
+
+  function openReply() {
+    if (isReplyOpen || newMailQueue.length === 0) {
+      return;
+    }
+
+    const replyData = newMailQueue.shift();
+
+    isReplyOpen = true;
+    notification.style.display = "none";
+    overlay.style.display = "block";
+    reply.style.display = "block";
+
+    renderReply(replyData);
+  }
+
+  function renderReply(replyData) {
+    typingToken += 1;
+    const currentToken = typingToken;
+
+    replyText.innerHTML = "";
+    replySuffix.textContent = "";
+
+    if (replyData.suffix) {
+      replySuffix.textContent = replyData.suffix;
+    }
+
+    renderSegments(replyData.segments, currentToken, function() {
+      if (currentToken !== typingToken || !isReplyOpen) {
+        return;
+      }
+
+      if (replyData.options) {
+        appendOptions(replyData.options);
+      }
+
+      if (replyData.showXPost) {
+        appendXPostButton(replyData.showXPost);
+      }
+    });
+  }
+
+  function renderSegments(segments, token, finished) {
+    let segmentIndex = 0;
+
+    function renderNextSegment() {
+      if (token !== typingToken || !isReplyOpen) {
+        return;
+      }
+
+      if (segmentIndex >= segments.length) {
+        finished();
+        return;
+      }
+
+      const segment = segments[segmentIndex];
+
+      if (segment.type === "attachment") {
+        appendAttachment(segment.attachment);
+        segmentIndex += 1;
+        setTimeout(renderNextSegment, 80);
+        return;
+      }
+
+      const paragraph = document.createElement("div");
+      paragraph.className = "reply-paragraph";
+      replyText.appendChild(paragraph);
+
+      let characterIndex = 0;
+
+      function typeNextCharacter() {
+        if (token !== typingToken || !isReplyOpen) {
+          return;
+        }
+
+        if (characterIndex < segment.text.length) {
+          paragraph.textContent += segment.text.charAt(characterIndex);
+          characterIndex += 1;
+          setTimeout(typeNextCharacter, 25);
+          return;
+        }
+
+        segmentIndex += 1;
+        setTimeout(renderNextSegment, 80);
+      }
+
+      typeNextCharacter();
+    }
+
+    renderNextSegment();
+  }
+
+  function appendAttachment(attachmentData) {
+    const wrap = document.createElement("div");
+    wrap.className = "attachment";
+
+    const label = document.createElement("div");
+    label.className = "attachment-label";
+    label.textContent = "📎 添付ファイル： " + attachmentData.filename;
+
+    const image = document.createElement("img");
+    image.className = "attachment-image";
+    image.src = attachmentData.src;
+    image.alt = attachmentData.alt;
+
+    const missing = document.createElement("div");
+    missing.className = "attachment-missing";
+    missing.textContent =
+      "画像「" + attachmentData.filename + "」を index.html と同じ場所に置いてください。";
+
+    image.addEventListener("error", function() {
+      image.style.display = "none";
+      missing.style.display = "block";
+    });
+
+    wrap.appendChild(label);
+    wrap.appendChild(image);
+    wrap.appendChild(missing);
+    replyText.appendChild(wrap);
+  }
+
+  function appendOptions(optionNumbers) {
+    const optionArea = document.createElement("div");
+    optionArea.className = "optionArea";
+
+    optionNumbers.forEach(function(optionNumber) {
+      const optionButton = document.createElement("button");
+      optionButton.type = "button";
+      optionButton.className = "optionBtn";
+      optionButton.textContent = optionLabels[optionNumber];
+
+      optionButton.addEventListener("click", function() {
+        optionClick(optionNumber);
+      });
+
+      optionArea.appendChild(optionButton);
+    });
+
+    replyText.appendChild(optionArea);
+  }
+
+  function optionClick(optionNumber) {
+    const nextReply = optionReplies[optionNumber];
+
+    if (!nextReply) {
+      return;
+    }
+
+    closeReplyForNextMail();
+    queueNewMail(nextReply);
+  }
+
+  function appendXPostButton(postType) {
+    const wrap = document.createElement("div");
+    wrap.className = "xPostWrap";
+
+    const xPostButton = document.createElement("button");
+    xPostButton.type = "button";
+    xPostButton.className = "xPostBtn";
+    xPostButton.textContent = "Xで報告する";
+
+    xPostButton.addEventListener("click", function() {
+      postToX(postType);
+    });
+
+    wrap.appendChild(xPostButton);
+    replyText.appendChild(wrap);
+  }
+
+  function postToX(postType) {
+    let postText = "";
+
+    if (postType === "nf") {
+      postText =
+        "【おりたたみ探偵file004】\n" +
+        "N.Fについて少し知ることができた！\n" +
+        "※N.Fについてで聞けるストーリーはネタバレOK◎";
+    } else {
+      postText =
+        "【File004：おりたたみ探偵事務所　ミルクちゃん捜索】\n" +
+        "ミルクちゃんの居場所を突き止め、\n" +
+        "N.Fに報告した\n" +
+        "#おりたたみ探偵事務所 #謎解き";
+    }
+
+    const postUrl =
+      "https://x.com/intent/post?text=" +
+      encodeURIComponent(postText);
+
+    window.open(postUrl, "_blank", "noopener,noreferrer");
+  }
+
+  function hideReplyWindow() {
+    typingToken += 1;
+    isReplyOpen = false;
+
+    overlay.style.display = "none";
+    reply.style.display = "none";
+
+    replyText.innerHTML = "";
+    replySuffix.textContent = "";
+  }
+
+  function resetToInitialScreen() {
+    status.style.display = "none";
+    notification.style.display = "none";
+    mailBox.classList.remove("sending");
+
+    isSending = false;
+    sendButton.textContent = "送信";
+    answerBox.value = "";
+    updateSendButton();
+  }
+
+  function closeReply() {
+    hideReplyWindow();
+    newMailQueue.length = 0;
+    resetToInitialScreen();
+
+    setTimeout(function() {
+      answerBox.focus();
+    }, 0);
+  }
+
+  function closeReplyForNextMail() {
+    hideReplyWindow();
+    newMailQueue.length = 0;
+    resetToInitialScreen();
+
+    setTimeout(function() {
+      answerBox.focus();
+    }, 0);
+  }
+
+  answerBox.addEventListener("input", updateSendButton);
+  sendButton.addEventListener("click", sendMail);
+  notification.addEventListener("click", openReply);
+  closeReplyButton.addEventListener("click", closeReply);
+  overlay.addEventListener("click", closeReply);
+
+  updateSendButton();
+</script>
+</body>
+</html>
