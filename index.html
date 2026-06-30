@@ -96,7 +96,9 @@
     line-height: 1.8;
   }
 
-  textarea::placeholder { color: #6f7580; }
+  textarea::placeholder {
+    color: #6f7580;
+  }
 
   .footer-area {
     display: flex;
@@ -156,7 +158,9 @@
     animation: fadeIn 0.5s;
   }
 
-  .notification:hover { background: #f8f8fb; }
+  .notification:hover {
+    background: #f8f8fb;
+  }
 
   .overlay {
     display: none;
@@ -219,7 +223,9 @@
     font-size: 24px;
   }
 
-  .closeBtn:hover { color: #000000; }
+  .closeBtn:hover {
+    color: #000000;
+  }
 
   .attachment {
     margin: 0 0 18px;
@@ -269,7 +275,9 @@
     animation: xButtonIn 0.6s ease;
   }
 
-  .optionArea { margin-top: 18px; }
+  .optionArea {
+    margin-top: 18px;
+  }
 
   .optionBtn {
     display: block;
@@ -283,7 +291,9 @@
   }
 
   .optionBtn:hover,
-  .xPostBtn:hover { opacity: 0.85; }
+  .xPostBtn:hover {
+    opacity: 0.85;
+  }
 
   footer {
     position: fixed;
@@ -308,13 +318,38 @@
   }
 
   @media (max-width: 520px) {
-    body { padding-top: 16px; padding-bottom: 70px; }
-    .header { padding: 16px 18px; font-size: 16px; }
-    .row { padding: 0 14px; }
-    .label { width: 74px; font-size: 15px; }
-    .value { font-size: 15px; }
-    textarea { height: 260px; padding: 18px 16px; font-size: 16px; }
-    .reply { padding: 20px; }
+    body {
+      padding-top: 16px;
+      padding-bottom: 70px;
+    }
+
+    .header {
+      padding: 16px 18px;
+      font-size: 16px;
+    }
+
+    .row {
+      padding: 0 14px;
+    }
+
+    .label {
+      width: 74px;
+      font-size: 15px;
+    }
+
+    .value {
+      font-size: 15px;
+    }
+
+    textarea {
+      height: 260px;
+      padding: 18px 16px;
+      font-size: 16px;
+    }
+
+    .reply {
+      padding: 20px;
+    }
   }
 </style>
 </head>
@@ -384,73 +419,65 @@
   const closeReplyButton = document.getElementById("closeReplyButton");
 
   const newMailQueue = [];
-
   let isSending = false;
   let isReplyOpen = false;
   let typingToken = 0;
 
-  /*
-    写真を表示するための設定です。
-    GitHub上で index.html と同じ場所に「ura-photo.jpg」を置いてください。
-    ファイル名を変える場合は、下の photoAttachment の src だけ変更してください。
-  */
-  const photoAttachment = {
-    filename: "ura-photo.jpg",
-    src: "ura-photo.jpg",
-    alt: "N.Fから送られた紙の裏面の写真"
+  const attachments = {
+    memoBack: {
+      filename: "ura-photo.jpg",
+      src: "ura-photo.jpg",
+      alt: "N.Fから送られたメモの裏の写真"
+    },
+    map: {
+      filename: "map-photo.jpg",
+      src: "map-photo.jpg",
+      alt: "N.Fから送られた地図の写真"
+    },
+    kasane: {
+      filename: "kasane-photo.jpg",
+      src: "kasane-photo.jpg",
+      alt: "N.Fが地図とメモを重ねた写真"
+    }
   };
 
   const optionLabels = {
     1: "①渡された紙について",
     2: "②Ｎ．Ｆは何ができるのか？",
-    3: "③写真を貰ったが…",
-    4: "④マークの裏は読めたが…"
+    3: "③指示されていることがわからない",
+    4: "④せなかは見れた",
+    5: "⑤マークのいちとは？",
+    6: "⑥もう少し一緒に考えてほしい"
   };
 
-  /*
-    ヒントは ① → ② → ③ → ④ の順に開く形です。
-  */
   const optionReplies = {
     1: {
-      segments: [
-        {
-          type: "text",
-          text: "下のマスと連動しているのではないだろうか？"
-        }
-      ],
-      suffix: "＞渡された紙について",
-      options: [2]
+      segments: [{ type: "text", text: "下のマスと連動しているのではないだろうか？" }],
+      suffix: "＞渡された紙について"
     },
     2: {
-      segments: [
-        {
-          type: "text",
-          text: "行動を指示してくれれば、大抵のことはできるだろう。これの写真を送って。とかな。"
-        }
-      ],
-      suffix: "＞Ｎ．Ｆは何ができるのか？",
-      options: [3]
+      segments: [{ type: "text", text: "行動を指示してくれれば、大抵のことはできるだろう。これの写真を送って。とかな。" }],
+      suffix: "＞Ｎ．Ｆは何ができるのか？"
     },
     3: {
-      segments: [
-        {
-          type: "text",
-          text: "表の指示「まーくうらよめ」が関連しているのだろう。マークのようなものはないだろうか。"
-        }
-      ],
-      suffix: "＞写真を貰ったが…",
-      options: [4]
+      segments: [{ type: "text", text: "表の指示「ねこのせなか」とはどういうことだろうか。例えばこの絵の猫の背中をみるために私になにかできそうなことはないだろうか。" }],
+      suffix: "＞指示されていることがわからない"
     },
     4: {
-      segments: [
-        {
-          type: "text",
-          text: "最初の記号を裏から見て使ってみたらどうだろうか。"
-        }
-      ],
-      suffix: "＞マークの裏は読めたが…"
+      segments: [{ type: "text", text: "最初の記号を裏から見て使ってみたらどうだろうか。" }],
+      suffix: "＞せなかは見れた"
+    },
+    5: {
+      segments: [{ type: "text", text: "マークとはこのマスにある肉球のことだろう。私にできることはあるだろうか？" }],
+      suffix: "＞マークのいちとは？"
+    },
+    6: {
+      segments: [{ type: "text", text: "このマスとサイズが合いそうな紙が一個あるな。地図のようだ。さて、私はここから何をしたら良いかな？" }],
+      suffix: "＞もう少し一緒に考えてほしい"
     }
   };
+
+  const originalPostUrl = "元ポストのURLをここに貼る";
 
   function containsAny(text, words) {
     return words.some(function(word) {
@@ -460,7 +487,6 @@
 
   function updateSendButton() {
     sendButton.disabled = isSending || answerBox.value.trim() === "";
-
     if (!isSending) {
       sendButton.textContent = "送信";
     }
@@ -487,38 +513,60 @@
   }
 
   function getReplyData(input) {
-    const hasMarkUraYome = input.includes("まーくうらよめ");
+    const hasNekoSenakaMiro = input.includes("ねこのせなかみろ");
+    const hasMemoBackPhrase = input.includes("メモの裏");
     const hasUra = containsAny(input, ["裏", "うら"]);
     const hasLook = containsAny(input, ["見", "めくって"]);
+    const hasMarkNoIchiMiro = input.includes("まーくのいちみろ");
+    const hasMapWord = input.includes("地図");
+    const hasMemoWord = input.includes("メモ");
+    const hasKasane = input.includes("重ねて");
     const hasCat = containsAny(input, ["cat", "Cat", "ネコ", "キャット", "猫", "ミルク"]);
     const hasHint = containsAny(input, ["わからない", "ヒント"]);
     const hasBread = containsAny(input, ["bread", "BREAD", "パン"]);
     const hasHaruno = input.includes("春野鏡子");
     const hasNFAbout = containsAny(input, ["N.Fについて", "N．Fについて", "NFについて"]);
-    const hasFuruhonya = containsAny(input, ["ふるほんやだ", "古本屋"]);
+    const hasFuruhonya = containsAny(input, ["ふるほんや", "古本屋"]);
 
-    if (hasMarkUraYome) {
+    if ((hasMapWord || hasMemoWord) && hasKasane) {
       return {
         segments: [
-          {
-            type: "text",
-            text: "まーく？うら…？\nどういうことだろうか？\n私にできることがあれば教えてくれ。"
-          }
+          { type: "text", text: "わかった、重ねて透かしてみよう。どうだろうか" },
+          { type: "attachment", attachment: attachments.kasane }
         ]
       };
     }
 
-    if (hasUra && hasLook) {
+    if (hasMemoBackPhrase || (hasUra && hasLook)) {
       return {
         segments: [
-          {
-            type: "text",
-            text: "紙の裏か。\n今写真を送る。\nなにかわかるだろうか？"
-          },
-          {
-            type: "attachment",
-            attachment: photoAttachment
-          }
+          { type: "text", text: "なるほど、背中とは紙の裏のことか。\n今写真を送る。\nなにかわかるだろうか？" },
+          { type: "attachment", attachment: attachments.memoBack }
+        ]
+      };
+    }
+
+    if (hasNekoSenakaMiro) {
+      return {
+        segments: [
+          { type: "text", text: "ねこのせなか…\n確かに猫は書かれているが…？\n私にできることがあれば教えてくれ。" }
+        ]
+      };
+    }
+
+    if (hasMarkNoIchiMiro) {
+      return {
+        segments: [
+          { type: "text", text: "マーク…\n先ほど使った謎のマスの中にマークらしきものがあるな\nしかしこれではまだ猫の居場所はわからない…" }
+        ]
+      };
+    }
+
+    if (hasMapWord) {
+      return {
+        segments: [
+          { type: "text", text: "これだな、写真を送ろう。" },
+          { type: "attachment", attachment: attachments.map }
         ]
       };
     }
@@ -526,10 +574,7 @@
     if (hasCat) {
       return {
         segments: [
-          {
-            type: "text",
-            text: "まさか追っている最中に謎解きを迫られるとは…\n君がいてくれてよかったよ。"
-          }
+          { type: "text", text: "まさか追っている最中に謎解きを迫られるとは…\n君がいてくれてよかったよ。" }
         ]
       };
     }
@@ -537,22 +582,16 @@
     if (hasHint) {
       return {
         segments: [
-          {
-            type: "text",
-            text: "一緒に思考を整理しよう。まずは君の推理を聞かせてくれ。"
-          }
+          { type: "text", text: "一緒に思考を整理しよう。まずは君の推理を聞かせてくれ。" }
         ],
-        options: [1]
+        options: [1, 2, 3, 4, 5, 6]
       };
     }
 
     if (hasFuruhonya) {
       return {
         segments: [
-          {
-            type: "text",
-            text: "ふるほんやだ…ああ古本屋か！\nこの先ほど一店舗見かけた。そこに向ってみることにしよう。\n聞き込みの最中に謎を仕掛けられて困っていた…\n君がいてくれて助かった、ありがとう。"
-          }
+          { type: "text", text: "地図とマークが合致するのは古本屋だな\nなるほど紙を使ったトリックというわけだ。制作者の彼もずいぶんと満足そうだったよ\n聞き込みの最中に謎を仕掛けられて困っていたんだ…\n君がいてくれて助かった、ありがとう。" }
         ],
         showXPost: "milk"
       };
@@ -561,10 +600,7 @@
     if (hasNFAbout) {
       return {
         segments: [
-          {
-            type: "text",
-            text: "私について、か。\n年齢は君よりもずっと上のはずだ。\n最近油物がダメになってきてね…"
-          }
+          { type: "text", text: "私について、か。\n年齢は君よりもずっと上のはずだ。\n最近油物がダメになってきてね…" }
         ],
         showXPost: "nf"
       };
@@ -573,10 +609,7 @@
     if (hasBread) {
       return {
         segments: [
-          {
-            type: "text",
-            text: "ミルクちゃんがいないとご主人はだいぶ混乱されていたよ…"
-          }
+          { type: "text", text: "ミルクちゃんがいないとご主人はだいぶ混乱されていたよ…" }
         ]
       };
     }
@@ -584,33 +617,23 @@
     if (hasHaruno) {
       return {
         segments: [
-          {
-            type: "text",
-            text: "彼女の事件を追っていたのだがな…。"
-          }
+          { type: "text", text: "彼女の事件を追っていたのだがな…。" }
         ]
       };
     }
 
     return {
       segments: [
-        {
-          type: "text",
-          text: "なるほど…情報が足りない。もう一度確認してほしい。"
-        }
+        { type: "text", text: "なるほど…情報が足りない。もう一度確認してほしい。" }
       ]
     };
   }
 
   function sendMail() {
     const input = answerBox.value.trim();
-
-    if (input === "" || isSending) {
-      return;
-    }
+    if (input === "" || isSending) return;
 
     const replyData = getReplyData(input);
-
     isSending = true;
     sendButton.disabled = true;
     sendButton.textContent = "送信中...";
@@ -636,17 +659,13 @@
   }
 
   function openReply() {
-    if (isReplyOpen || newMailQueue.length === 0) {
-      return;
-    }
+    if (isReplyOpen || newMailQueue.length === 0) return;
 
     const replyData = newMailQueue.shift();
-
     isReplyOpen = true;
     notification.style.display = "none";
     overlay.style.display = "block";
     reply.style.display = "block";
-
     renderReply(replyData);
   }
 
@@ -662,17 +681,9 @@
     }
 
     renderSegments(replyData.segments, currentToken, function() {
-      if (currentToken !== typingToken || !isReplyOpen) {
-        return;
-      }
-
-      if (replyData.options) {
-        appendOptions(replyData.options);
-      }
-
-      if (replyData.showXPost) {
-        appendXPostButton(replyData.showXPost);
-      }
+      if (currentToken !== typingToken || !isReplyOpen) return;
+      if (replyData.options) appendOptions(replyData.options);
+      if (replyData.showXPost) appendXPostButton(replyData.showXPost);
     });
   }
 
@@ -680,10 +691,7 @@
     let segmentIndex = 0;
 
     function renderNextSegment() {
-      if (token !== typingToken || !isReplyOpen) {
-        return;
-      }
-
+      if (token !== typingToken || !isReplyOpen) return;
       if (segmentIndex >= segments.length) {
         finished();
         return;
@@ -703,11 +711,8 @@
       replyText.appendChild(paragraph);
 
       let characterIndex = 0;
-
       function typeNextCharacter() {
-        if (token !== typingToken || !isReplyOpen) {
-          return;
-        }
+        if (token !== typingToken || !isReplyOpen) return;
 
         if (characterIndex < segment.text.length) {
           paragraph.textContent += segment.text.charAt(characterIndex);
@@ -741,8 +746,7 @@
 
     const missing = document.createElement("div");
     missing.className = "attachment-missing";
-    missing.textContent =
-      "画像「" + attachmentData.filename + "」を index.html と同じ場所に置いてください。";
+    missing.textContent = "画像「" + attachmentData.filename + "」を index.html と同じ場所に置いてください。";
 
     image.addEventListener("error", function() {
       image.style.display = "none";
@@ -764,11 +768,9 @@
       optionButton.type = "button";
       optionButton.className = "optionBtn";
       optionButton.textContent = optionLabels[optionNumber];
-
       optionButton.addEventListener("click", function() {
         optionClick(optionNumber);
       });
-
       optionArea.appendChild(optionButton);
     });
 
@@ -777,10 +779,7 @@
 
   function optionClick(optionNumber) {
     const nextReply = optionReplies[optionNumber];
-
-    if (!nextReply) {
-      return;
-    }
+    if (!nextReply) return;
 
     closeReplyForNextMail();
     queueNewMail(nextReply);
@@ -794,7 +793,6 @@
     xPostButton.type = "button";
     xPostButton.className = "xPostBtn";
     xPostButton.textContent = "Xで報告する";
-
     xPostButton.addEventListener("click", function() {
       postToX(postType);
     });
@@ -802,12 +800,6 @@
     wrap.appendChild(xPostButton);
     replyText.appendChild(wrap);
   }
-
-  /*
-    File004の「元になる謎ポスト」のURLをここに貼ってください。
-    例： https://x.com/r4lu3m8l/status/1234567890123456789
-  */
-  const originalPostUrl = "元ポストのURLをここに貼る";
 
   function postToX(postType) {
     let postText = "";
@@ -830,10 +822,6 @@
       return;
     }
 
-    /*
-      元ポストのURLを一緒に渡すことで、
-      Xの投稿画面で元ポストを引用する形で報告できます。
-    */
     const postUrl =
       "https://x.com/intent/tweet?text=" +
       encodeURIComponent(postText) +
@@ -846,10 +834,8 @@
   function hideReplyWindow() {
     typingToken += 1;
     isReplyOpen = false;
-
     overlay.style.display = "none";
     reply.style.display = "none";
-
     replyText.innerHTML = "";
     replySuffix.textContent = "";
   }
@@ -858,7 +844,6 @@
     status.style.display = "none";
     notification.style.display = "none";
     mailBox.classList.remove("sending");
-
     isSending = false;
     sendButton.textContent = "送信";
     answerBox.value = "";
@@ -869,20 +854,14 @@
     hideReplyWindow();
     newMailQueue.length = 0;
     resetToInitialScreen();
-
-    setTimeout(function() {
-      answerBox.focus();
-    }, 0);
+    setTimeout(function() { answerBox.focus(); }, 0);
   }
 
   function closeReplyForNextMail() {
     hideReplyWindow();
     newMailQueue.length = 0;
     resetToInitialScreen();
-
-    setTimeout(function() {
-      answerBox.focus();
-    }, 0);
+    setTimeout(function() { answerBox.focus(); }, 0);
   }
 
   answerBox.addEventListener("input", updateSendButton);
@@ -890,7 +869,6 @@
   notification.addEventListener("click", openReply);
   closeReplyButton.addEventListener("click", closeReply);
   overlay.addEventListener("click", closeReply);
-
   updateSendButton();
 </script>
 </body>
