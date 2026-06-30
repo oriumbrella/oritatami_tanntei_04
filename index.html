@@ -450,26 +450,35 @@
     6: "⑥もう少し一緒に考えてほしい"
   };
 
+  /*
+    ヒントは1通につきボタン1つだけ表示します。
+    ①を押すと②、②を押すと③……という順番で進みます。
+  */
   const optionReplies = {
     1: {
       segments: [{ type: "text", text: "下のマスと連動しているのではないだろうか？" }],
-      suffix: "＞渡された紙について"
+      suffix: "＞渡された紙について",
+      options: [2]
     },
     2: {
       segments: [{ type: "text", text: "行動を指示してくれれば、大抵のことはできるだろう。これの写真を送って。とかな。" }],
-      suffix: "＞Ｎ．Ｆは何ができるのか？"
+      suffix: "＞Ｎ．Ｆは何ができるのか？",
+      options: [3]
     },
     3: {
       segments: [{ type: "text", text: "表の指示「ねこのせなか」とはどういうことだろうか。例えばこの絵の猫の背中をみるために私になにかできそうなことはないだろうか。" }],
-      suffix: "＞指示されていることがわからない"
+      suffix: "＞指示されていることがわからない",
+      options: [4]
     },
     4: {
       segments: [{ type: "text", text: "最初の記号を裏から見て使ってみたらどうだろうか。" }],
-      suffix: "＞せなかは見れた"
+      suffix: "＞せなかは見れた",
+      options: [5]
     },
     5: {
       segments: [{ type: "text", text: "マークとはこのマスにある肉球のことだろう。私にできることはあるだろうか？" }],
-      suffix: "＞マークのいちとは？"
+      suffix: "＞マークのいちとは？",
+      options: [6]
     },
     6: {
       segments: [{ type: "text", text: "このマスとサイズが合いそうな紙が一個あるな。地図のようだ。さて、私はここから何をしたら良いかな？" }],
@@ -525,8 +534,23 @@
     const hasHint = containsAny(input, ["わからない", "ヒント"]);
     const hasBread = containsAny(input, ["bread", "BREAD", "パン"]);
     const hasHaruno = input.includes("春野鏡子");
+    const hasNFPhoto =
+      containsAny(input, ["N.F", "N．F", "NF"]) &&
+      input.includes("写真");
     const hasNFAbout = containsAny(input, ["N.Fについて", "N．Fについて", "NFについて"]);
     const hasFuruhonya = containsAny(input, ["ふるほんや", "古本屋"]);
+
+    if (hasNFPhoto) {
+      return {
+        segments: [
+          {
+            type: "text",
+            text: "私の写真など必要だろうか…。\n映りが悪くてね、送るのは気恥ずかしい"
+          }
+        ],
+        showXPost: "nf"
+      };
+    }
 
     if ((hasMapWord || hasMemoWord) && hasKasane) {
       return {
@@ -584,7 +608,7 @@
         segments: [
           { type: "text", text: "一緒に思考を整理しよう。まずは君の推理を聞かせてくれ。" }
         ],
-        options: [1, 2, 3, 4, 5, 6]
+        options: [1]
       };
     }
 
